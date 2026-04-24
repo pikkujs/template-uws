@@ -1,0 +1,30 @@
+import { PikkuUWSServer } from '@pikku/uws'
+import { cors } from '@pikku/core/middleware'
+import { addHTTPMiddleware } from '@pikku/core/http'
+
+import '../pikku-gen/pikku-bootstrap.gen.js'
+import {
+  createConfig,
+  createSingletonServices,
+} from './services.js'
+
+addHTTPMiddleware('*', [cors({ origin: true, credentials: true })])
+
+async function main(): Promise<void> {
+  try {
+    const config = await createConfig()
+    const singletonServices = await createSingletonServices(config)
+    const appServer = new PikkuUWSServer(
+      { ...config, hostname: 'localhost', port: 4002 },
+      singletonServices.logger
+    )
+    appServer.enableExitOnSigInt()
+    await appServer.init()
+    await appServer.start()
+  } catch (e: any) {
+    console.error(e.toString())
+    process.exit(1)
+  }
+}
+
+main()
